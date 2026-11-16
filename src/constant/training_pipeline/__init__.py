@@ -1,7 +1,9 @@
 import os 
 import sys
 import numpy as np
-import pandas as pd
+import pandas as pd 
+from pathlib import Path
+
 
 TARGET_COLUMN = "Result"
 PIPELINE_NAME:str = "Network_Security"
@@ -10,8 +12,9 @@ FILE_NAME:str = "phisingData.csv"
 
 TRAIN_FILE_NAME:str = "train.csv"
 TEST_FILE_NAME:str = "test.csv"
+ROOT_DIR = Path(__file__).resolve().parents[3]
 
-SCHEMA_FILE_PATH = os.path.join("data_schema","schema.yml")
+SCHEMA_FILE_PATH = os.path.join(ROOT_DIR,"data_schema","schema.yml")
 
 SAVED_MODEL_DIR = os.path.join("saved_models")
 MODEL_FILE_NAME = "model.pkl"

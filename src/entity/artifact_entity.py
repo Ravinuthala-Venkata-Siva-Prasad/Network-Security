@@ -31,3 +31,14 @@ class ModelTrainerArtifact:
     trained_model_file_path: str
     train_metric_artifact: ClassificationMetricArtifact
     test_metric_artifact: ClassificationMetricArtifact
+
+@dataclass
+class ModelEvaluationArtifact:
+    is_model_accepted: bool
+    evaluation_report_file_path: str
+    confusion_matrix_image_path: str
+    accuracy: float
+    precision: float
+    recall: float
+    f1_score: float
+    roc_auc: float
