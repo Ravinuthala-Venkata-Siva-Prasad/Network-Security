@@ -1,6 +1,9 @@
 import os
 import sys
 
+import mlflow
+import dagshub
+
 from src.exception.exception import NetworkSecurityException
 from src.logging.logger import logging
 
@@ -25,7 +28,6 @@ from src.utils.ml_utils.metric.classification_metric import (
 )
 
 from sklearn.linear_model import LogisticRegression
-from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 
 from sklearn.ensemble import (
@@ -34,10 +36,66 @@ from sklearn.ensemble import (
     RandomForestClassifier
 )
 
-import mlflow
-import dagshub
-dagshub.init(repo_owner='Ravinuthala-Venkata-Siva-Prasad', repo_name='Network-Security', mlflow=True)
 
+# ==========================================================
+# DAGSHUB CONFIGURATION
+# ==========================================================
+
+ENABLE_DAGSHUB_TRACKING = (
+    os.getenv(
+        "ENABLE_DAGSHUB_TRACKING",
+        "false"
+    ).lower() == "true"
+)
+
+
+def initialize_dagshub():
+
+    """
+    Initialize DagsHub only when tracking is explicitly enabled.
+
+    Normal application startup and prediction do not require
+    DagsHub authentication.
+    """
+
+    if not ENABLE_DAGSHUB_TRACKING:
+
+        logging.info(
+            "DagsHub tracking disabled. "
+            "Running without remote MLflow tracking."
+        )
+
+        print("DagsHub tracking disabled.")
+
+        return False
+
+    token = os.getenv("DAGSHUB_USER_TOKEN")
+
+    if not token:
+
+        raise RuntimeError(
+            "DAGSHUB_USER_TOKEN is required "
+            "when DagsHub tracking is enabled."
+        )
+
+    dagshub.init(
+        repo_owner="Ravinuthala-Venkata-Siva-Prasad",
+        repo_name="Network-Security",
+        mlflow=True
+    )
+
+    logging.info(
+        "DagsHub initialized successfully."
+    )
+
+    print("DagsHub initialized successfully.")
+
+    return True
+
+
+# ==========================================================
+# MODEL TRAINER
+# ==========================================================
 
 class ModelTrainer:
 
@@ -55,18 +113,48 @@ class ModelTrainer:
                 data_transformation_artifact
             )
 
+            self.dagshub_initialized = False
+
         except Exception as e:
 
             raise NetworkSecurityException(e, sys)
 
-    def track_mlflow(self, best_model, classification_metric):
+    # ======================================================
+    # MLFLOW TRACKING
+    # ======================================================
+
+    def track_mlflow(
+        self,
+        best_model,
+        classification_metric
+    ):
 
         try:
 
+            # Do not attempt remote tracking when disabled.
+            if not ENABLE_DAGSHUB_TRACKING:
+
+                logging.info(
+                    "Skipping MLflow tracking because "
+                    "DagsHub tracking is disabled."
+                )
+
+                return
+
+            # Initialize DagsHub only when tracking is needed.
+            if not self.dagshub_initialized:
+
+                self.dagshub_initialized = (
+                    initialize_dagshub()
+                )
+
             with mlflow.start_run():
 
-                # Classification Metrics
-                f1_score = classification_metric.f1_score
+                # Classification metrics
+
+                f1_score = (
+                    classification_metric.f1_score
+                )
 
                 precision_score = (
                     classification_metric.precision_score
@@ -76,7 +164,8 @@ class ModelTrainer:
                     classification_metric.recall_score
                 )
 
-                # Log Metrics
+                # Log metrics
+
                 mlflow.log_metric(
                     "f1_score",
                     f1_score
@@ -92,7 +181,8 @@ class ModelTrainer:
                     recall_score
                 )
 
-                # Log Model
+                # Log model
+
                 mlflow.sklearn.log_model(
                     sk_model=best_model,
                     name="model",
@@ -102,12 +192,17 @@ class ModelTrainer:
                 )
 
                 logging.info(
-                    "Model and classification metrics logged successfully"
+                    "Model and classification metrics "
+                    "logged successfully."
                 )
 
         except Exception as e:
 
             raise NetworkSecurityException(e, sys)
+
+    # ======================================================
+    # MODEL TRAINING
+    # ======================================================
 
     def train_model(
         self,
@@ -119,7 +214,14 @@ class ModelTrainer:
 
         try:
 
-            logging.info("Starting model training")
+            logging.info(
+                "Starting model training."
+            )
+
+            # ----------------------------------------------
+            # MODELS
+            # ----------------------------------------------
+
             models = {
 
                 "Random Forest": RandomForestClassifier(
@@ -147,6 +249,11 @@ class ModelTrainer:
                 )
 
             }
+
+            # ----------------------------------------------
+            # HYPERPARAMETER CONFIGURATION
+            # ----------------------------------------------
+
             params = {
 
                 "Decision Tree": {
@@ -222,7 +329,13 @@ class ModelTrainer:
 
             }
 
-            logging.info("Evaluating different ML models")
+            # ----------------------------------------------
+            # EVALUATE MODELS
+            # ----------------------------------------------
+
+            logging.info(
+                "Evaluating different ML models."
+            )
 
             model_report = evaluate_models(
 
@@ -244,15 +357,24 @@ class ModelTrainer:
                 f"Model Evaluation Report: {model_report}"
             )
 
+            # ----------------------------------------------
+            # SELECT BEST MODEL
+            # ----------------------------------------------
+
+            if not model_report:
+
+                raise ValueError(
+                    "Model evaluation returned an empty report."
+                )
+
             best_model_score = max(
                 model_report.values()
             )
 
-            best_model_name = list(model_report.keys())[
-                list(model_report.values()).index(
-                    best_model_score
-                )
-            ]
+            best_model_name = max(
+                model_report,
+                key=model_report.get
+            )
 
             best_model = models[best_model_name]
 
@@ -266,13 +388,25 @@ class ModelTrainer:
 
             print("\n========== BEST MODEL ==========")
 
-            print("Model Name:", best_model_name)
+            print(
+                "Model Name:",
+                best_model_name
+            )
 
-            print("Model Score:", best_model_score)
+            print(
+                "Model Score:",
+                best_model_score
+            )
 
             print("================================")
 
-            y_train_pred = best_model.predict(X_train)
+            # ----------------------------------------------
+            # TRAINING METRICS
+            # ----------------------------------------------
+
+            y_train_pred = best_model.predict(
+                X_train
+            )
 
             classification_train_metric = (
                 get_classification_score(
@@ -288,7 +422,13 @@ class ModelTrainer:
                 f"Training Metrics: {classification_train_metric}"
             )
 
-            y_test_pred = best_model.predict(X_test)
+            # ----------------------------------------------
+            # TESTING METRICS
+            # ----------------------------------------------
+
+            y_test_pred = best_model.predict(
+                X_test
+            )
 
             classification_test_metric = (
                 get_classification_score(
@@ -304,7 +444,13 @@ class ModelTrainer:
                 f"Testing Metrics: {classification_test_metric}"
             )
 
-            logging.info("Tracking training metrics with MLflow")
+            # ----------------------------------------------
+            # OPTIONAL MLFLOW TRACKING
+            # ----------------------------------------------
+
+            logging.info(
+                "Checking MLflow tracking configuration."
+            )
 
             self.track_mlflow(
                 best_model,
@@ -316,6 +462,10 @@ class ModelTrainer:
                 classification_test_metric
             )
 
+            # ----------------------------------------------
+            # LOAD PREPROCESSOR
+            # ----------------------------------------------
+
             preprocessor = load_object(
 
                 file_path=(
@@ -324,6 +474,10 @@ class ModelTrainer:
                 )
 
             )
+
+            # ----------------------------------------------
+            # SAVE TRAINED MODEL
+            # ----------------------------------------------
 
             model_dir_path = os.path.dirname(
                 self.model_trainer_config.trained_model_file_path
@@ -341,6 +495,7 @@ class ModelTrainer:
                 model=best_model
 
             )
+
             save_object(
 
                 self.model_trainer_config.trained_model_file_path,
@@ -348,6 +503,11 @@ class ModelTrainer:
                 obj=network_model
 
             )
+
+            # ----------------------------------------------
+            # SAVE FINAL MODEL
+            # ----------------------------------------------
+
             os.makedirs(
                 "final_model",
                 exist_ok=True
@@ -362,8 +522,12 @@ class ModelTrainer:
             )
 
             logging.info(
-                "Trained model saved successfully"
+                "Trained model saved successfully."
             )
+
+            # ----------------------------------------------
+            # MODEL TRAINER ARTIFACT
+            # ----------------------------------------------
 
             model_trainer_artifact = ModelTrainerArtifact(
 
@@ -385,11 +549,23 @@ class ModelTrainer:
                 f"Model Trainer Artifact: {model_trainer_artifact}"
             )
 
-            print("\n========== MODEL TRAINING COMPLETED ==========")
+            # ----------------------------------------------
+            # TRAINING SUMMARY
+            # ----------------------------------------------
 
-            print("Best Model:", best_model_name)
+            print(
+                "\n========== MODEL TRAINING COMPLETED =========="
+            )
 
-            print("Best Model Score:", best_model_score)
+            print(
+                "Best Model:",
+                best_model_name
+            )
+
+            print(
+                "Best Model Score:",
+                best_model_score
+            )
 
             print(
                 "Training F1 Score:",
@@ -406,7 +582,9 @@ class ModelTrainer:
                 self.model_trainer_config.trained_model_file_path
             )
 
-            print("==============================================")
+            print(
+                "=============================================="
+            )
 
             return model_trainer_artifact
 
@@ -414,13 +592,21 @@ class ModelTrainer:
 
             raise NetworkSecurityException(e, sys)
 
+    # ======================================================
+    # INITIATE MODEL TRAINER
+    # ======================================================
+
     def initiate_model_trainer(self) -> ModelTrainerArtifact:
 
         try:
 
             logging.info(
-                "Entered initiate_model_trainer method"
+                "Entered initiate_model_trainer method."
             )
+
+            # ----------------------------------------------
+            # LOAD TRAINING DATA
+            # ----------------------------------------------
 
             train_file_path = (
                 self.data_transformation_artifact
@@ -431,6 +617,7 @@ class ModelTrainer:
                 self.data_transformation_artifact
                 .transformed_test_file_path
             )
+
             train_arr = load_numpy_array_data(
                 train_file_path
             )
@@ -447,6 +634,10 @@ class ModelTrainer:
                 f"Testing Array Shape: {test_arr.shape}"
             )
 
+            # ----------------------------------------------
+            # SPLIT FEATURES AND TARGET
+            # ----------------------------------------------
+
             X_train = train_arr[:, :-1]
 
             y_train = train_arr[:, -1]
@@ -455,7 +646,9 @@ class ModelTrainer:
 
             y_test = test_arr[:, -1]
 
-         
+            # ----------------------------------------------
+            # TRAIN MODEL
+            # ----------------------------------------------
 
             model_trainer_artifact = self.train_model(
 
@@ -470,7 +663,7 @@ class ModelTrainer:
             )
 
             logging.info(
-                "Model training completed successfully"
+                "Model training completed successfully."
             )
 
             return model_trainer_artifact
