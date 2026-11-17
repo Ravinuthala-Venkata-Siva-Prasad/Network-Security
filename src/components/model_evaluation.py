@@ -3,6 +3,7 @@ import sys
 import json
 import numpy as np
 import matplotlib.pyplot as plt
+import mlflow
 
 from sklearn.metrics import (
     accuracy_score,
@@ -55,16 +56,20 @@ class ModelEvaluation:
 
             logging.info("Starting Model Evaluation")
 
-            # Step 1: Load trained model
+            # ==========================================
+            # STEP 1: LOAD TRAINED MODEL
+            # ==========================================
+
             trained_model = load_object(
                 file_path=self.model_trainer_artifact.trained_model_file_path
             )
 
-            # The saved object is a NetworkModel wrapper.
-            # Access its underlying sklearn estimator.
             model = trained_model.model
 
-            # Step 2: Load transformed testing data
+            # ==========================================
+            # STEP 2: LOAD TEST DATA
+            # ==========================================
+
             test_arr = load_numpy_array_data(
                 self.data_transformation_artifact.transformed_test_file_path
             )
@@ -72,10 +77,16 @@ class ModelEvaluation:
             X_test = test_arr[:, :-1]
             y_test = test_arr[:, -1]
 
-            # Step 3: Generate predictions
+            # ==========================================
+            # STEP 3: PREDICTIONS
+            # ==========================================
+
             y_pred = model.predict(X_test)
 
-            # Step 4: Calculate evaluation metrics
+            # ==========================================
+            # STEP 4: EVALUATION METRICS
+            # ==========================================
+
             accuracy = accuracy_score(y_test, y_pred)
 
             precision = precision_score(
@@ -99,7 +110,10 @@ class ModelEvaluation:
                 zero_division=0
             )
 
-            # Step 5: Calculate ROC-AUC
+            # ==========================================
+            # STEP 5: ROC AUC
+            # ==========================================
+
             roc_auc = None
 
             if hasattr(model, "predict_proba") and len(np.unique(y_test)) == 2:
@@ -111,7 +125,10 @@ class ModelEvaluation:
                     y_probability
                 )
 
-            # Step 6: Classification report
+            # ==========================================
+            # STEP 6: CLASSIFICATION REPORT
+            # ==========================================
+
             report = classification_report(
                 y_test,
                 y_pred,
@@ -119,16 +136,25 @@ class ModelEvaluation:
                 zero_division=0
             )
 
-            # Step 7: Confusion matrix
+            # ==========================================
+            # STEP 7: CONFUSION MATRIX
+            # ==========================================
+
             cm = confusion_matrix(y_test, y_pred)
 
-            # Step 8: Create output directory
+            # ==========================================
+            # STEP 8: CREATE OUTPUT DIRECTORY
+            # ==========================================
+
             os.makedirs(
                 self.model_evaluation_config.model_evaluation_dir,
                 exist_ok=True
             )
 
-            # Step 9: Save evaluation report
+            # ==========================================
+            # STEP 9: SAVE EVALUATION REPORT
+            # ==========================================
+
             evaluation_report = {
                 "accuracy": float(accuracy),
                 "precision": float(precision),
@@ -152,7 +178,10 @@ class ModelEvaluation:
                     indent=4
                 )
 
-            # Step 10: Save confusion matrix image
+            # ==========================================
+            # STEP 10: SAVE CONFUSION MATRIX IMAGE
+            # ==========================================
+
             display = ConfusionMatrixDisplay(
                 confusion_matrix=cm
             )
@@ -168,7 +197,73 @@ class ModelEvaluation:
 
             plt.close()
 
-            # Step 11: Print results
+            # ==========================================
+            # STEP 11: MLFLOW TRACKING
+            # ==========================================
+
+            logging.info("Logging evaluation results to MLflow")
+
+            with mlflow.start_run(run_name="Model_Evaluation"):
+
+                # Log model information
+                mlflow.log_param(
+                    "model_type",
+                    type(model).__name__
+                )
+
+                mlflow.log_param(
+                    "evaluation_dataset",
+                    "test"
+                )
+
+                # Log evaluation metrics
+                mlflow.log_metric(
+                    "accuracy",
+                    float(accuracy)
+                )
+
+                mlflow.log_metric(
+                    "precision",
+                    float(precision)
+                )
+
+                mlflow.log_metric(
+                    "recall",
+                    float(recall)
+                )
+
+                mlflow.log_metric(
+                    "f1_score",
+                    float(f1)
+                )
+
+                if roc_auc is not None:
+
+                    mlflow.log_metric(
+                        "roc_auc",
+                        float(roc_auc)
+                    )
+
+                # Log evaluation report
+                mlflow.log_artifact(
+                    self.model_evaluation_config.evaluation_report_file_path,
+                    artifact_path="evaluation"
+                )
+
+                # Log confusion matrix
+                mlflow.log_artifact(
+                    self.model_evaluation_config.confusion_matrix_image_path,
+                    artifact_path="evaluation"
+                )
+
+                logging.info(
+                    "Evaluation metrics and artifacts logged successfully"
+                )
+
+            # ==========================================
+            # STEP 12: PRINT RESULTS
+            # ==========================================
+
             print("\n========== MODEL EVALUATION ==========")
 
             print(f"Accuracy  : {accuracy:.4f}")
@@ -182,34 +277,53 @@ class ModelEvaluation:
                 print("ROC-AUC   : Not available")
 
             print("\nClassification Report:")
-            print(classification_report(
-                y_test,
-                y_pred,
-                zero_division=0
-            ))
+
+            print(
+                classification_report(
+                    y_test,
+                    y_pred,
+                    zero_division=0
+                )
+            )
 
             print("Confusion Matrix:")
             print(cm)
 
             print("======================================")
 
-            # Step 12: Model acceptance
-            # This is a preliminary acceptance check.
-            # We will define a production threshold separately.
+            # ==========================================
+            # STEP 13: MODEL ACCEPTANCE
+            # ==========================================
+
+            # Placeholder only.
+            # A genuine acceptance threshold must be configured.
+
             is_model_accepted = True
 
+            # ==========================================
+            # STEP 14: CREATE EVALUATION ARTIFACT
+            # ==========================================
+
             model_evaluation_artifact = ModelEvaluationArtifact(
+
                 is_model_accepted=is_model_accepted,
+
                 evaluation_report_file_path=(
                     self.model_evaluation_config.evaluation_report_file_path
                 ),
+
                 confusion_matrix_image_path=(
                     self.model_evaluation_config.confusion_matrix_image_path
                 ),
+
                 accuracy=float(accuracy),
+
                 precision=float(precision),
+
                 recall=float(recall),
+
                 f1_score=float(f1),
+
                 roc_auc=(
                     float(roc_auc) if roc_auc is not None else 0.0
                 )
@@ -222,4 +336,5 @@ class ModelEvaluation:
             return model_evaluation_artifact
 
         except Exception as e:
+
             raise NetworkSecurityException(e, sys)

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Network Security Prediction Results</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <style>
+
+        body {
+            background-color: #f4f6f9;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            margin-top: 40px;
+            margin-bottom: 40px;
+        }
+
+        .main-title {
+            font-weight: bold;
+            color: #243447;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+        }
+
+        .card-header {
+            background-color: #243447;
+            color: white;
+            font-weight: bold;
+        }
+
+        .stat-card {
+            border-left: 5px solid #0d6efd;
+        }
+
+        .stat-number {
+            font-size: 30px;
+            font-weight: bold;
+            color: #243447;
+        }
+
+        .table-responsive {
+            max-height: 600px;
+            overflow: auto;
+            border-radius: 8px;
+        }
+
+        .table-responsive table {
+            background-color: white;
+            font-size: 14px;
+            min-width: 1600px;
+            margin-bottom: 0;
+        }
+
+        .table-responsive table th {
+            background-color: #243447 !important;
+            color: white !important;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .table-responsive table td {
+            white-space: nowrap;
+        }
+
+        .table-responsive tbody tr:hover {
+            background-color: #eaf2ff;
+        }
+
+        .btn-section {
+            margin-top: 25px;
+            margin-bottom: 25px;
+        }
+
+        footer {
+            margin-top: 40px;
+            color: #777;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+    <div class="container">
+
+        <!-- PAGE TITLE -->
+
+        <h2 class="text-center main-title mb-3">
+
+            Network Security
+
+        </h2>
+
+        <h5 class="text-center text-secondary mb-4">
+
+            Phishing Website Detection Results
+
+        </h5>
+
+
+        <!-- STATISTICS -->
+
+        <div class="row mb-4">
+
+            <div class="col-md-6 mb-3">
+
+                <div class="card shadow stat-card">
+
+                    <div class="card-body">
+
+                        <h6 class="text-secondary">
+
+                            Total Records
+
+                        </h6>
+
+                        <h3 class="stat-number">
+
+                            {{ total_records }}
+
+                        </h3>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-md-6 mb-3">
+
+                <div class="card shadow stat-card">
+
+                    <div class="card-body">
+
+                        <h6 class="text-secondary">
+
+                            Predictions Generated
+
+                        </h6>
+
+                        <h3 class="stat-number">
+
+                            {{ predicted_records }}
+
+                        </h3>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- PREDICTION RESULTS -->
+
+        <div class="card shadow">
+
+            <div class="card-header p-3">
+
+                Prediction Results
+
+            </div>
+
+            <div class="card-body">
+
+                <p class="text-muted">
+
+                    The following table contains your original
+                    input features and the generated model predictions.
+
+                </p>
+
+                <div class="table-responsive">
+
+                    {{ table | safe }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- BUTTONS -->
+
+        <div class="text-center btn-section">
+
+            <a
+                href="/"
+                class="btn btn-primary"
+            >
+
+                Back to Home
+
+            </a>
+
+
+            <a
+                href="/download"
+                class="btn btn-success"
+            >
+
+                Download Prediction CSV
+
+            </a>
+
+
+            <a
+                href="/docs"
+                class="btn btn-secondary"
+            >
+
+                API Documentation
+
+            </a>
+
+        </div>
+
+
+        <!-- FOOTER -->
+
+        <footer class="text-center">
+
+            <p>
+
+                Network Security | Machine Learning Project
+
+            </p>
+
+            <p>
+
+                Powered by Random Forest Classifier
+
+            </p>
+
+        </footer>
+
+    </div>
+
+</body>
+
+</html>
