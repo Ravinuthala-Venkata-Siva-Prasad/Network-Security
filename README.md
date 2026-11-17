@@ -62,7 +62,7 @@ Create `docs/images/` and add screenshots with these exact filenames to display 
 
 ```mermaid
 flowchart TD
-    A[CSV with 11055 input features] --> B[FastAPI Application]
+    A[CSV with 30 input features] --> B[FastAPI Application]
     B --> C[Input Validation and DataFrame]
     C --> D[Trained Random Forest Model]
     D --> E[Phishing / Legitimate Predictions]
@@ -161,7 +161,7 @@ Example successful health response:
 ## 📁 Repository Structure
 
 ```text
-Network-Security/
+Network-Security-Phishing-Website-Detection-using-Machine-Learning-AWS-CI-CD/
 ├── .github/workflows/       # GitHub Actions CI/CD workflow
 ├── data/                    # Project data
 ├── data_schema/             # Data schema definitions
@@ -193,7 +193,7 @@ Network-Security/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/Ravinuthala-Venkata-Siva-Prasad/Network-Security.git
+git clone https://github.com/Ravinuthala-Venkata-Siva-Prasad/Network-Security-Phishing-Website-Detection-using-Machine-Learning-AWS-CI-CD-Phishing-Website-Detection-using-Machine-Learning-AWS-CI-CD.git
 cd Network-Security
 ```
 
