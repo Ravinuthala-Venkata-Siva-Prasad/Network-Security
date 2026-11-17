@@ -1,49 +1,67 @@
 # 🛡️ Network Security – Phishing Website Detection using Machine Learning & AWS CI/CD
 
-An end-to-end Machine Learning application that detects phishing websites using a **Random Forest Classifier**. The project integrates FastAPI, MongoDB Atlas, Docker, AWS EC2, Amazon ECR, and GitHub Actions to automate application deployment through a CI/CD pipeline.
+An end-to-end Machine Learning project that detects phishing websites using a **Random Forest Classifier**. The application integrates FastAPI, MongoDB Atlas, Docker, AWS EC2, Amazon ECR, and GitHub Actions to deliver an automated Machine Learning deployment pipeline.
 
 <p align="center">
   <img src="docs/images/home-page.png" alt="Network Security Application" width="850">
+</p>
+
+<p align="center">
+  <b>Machine Learning | FastAPI | Docker | AWS | GitHub Actions CI/CD</b>
 </p>
 
 ---
 
 ## 📌 Table of Contents
 
-- [Project Overview](#-project-overview)
-- [Key Features](#-key-features)
-- [Dataset Information](#-dataset-information)
-- [Technology Stack](#-technology-stack)
-- [System Architecture](#-system-architecture)
-- [Machine Learning Workflow](#-machine-learning-workflow)
-- [Model Evaluation](#-model-evaluation)
-- [Application Screenshots](#-application-screenshots)
-- [API Endpoints](#-api-endpoints)
-- [Evidence and Validation](#-evidence-and-validation)
-- [CI/CD Pipeline](#-cicd-pipeline)
-- [AWS Deployment](#-aws-deployment)
-- [Run Locally](#-run-locally)
-- [Docker Deployment](#-docker-deployment)
-- [Project Structure](#-project-structure)
-- [Challenges and Solutions](#-challenges-and-solutions)
-- [Future Improvements](#-future-improvements)
-- [Learning Outcomes](#-learning-outcomes)
-- [Author](#-author)
+1. [Project Overview](#-project-overview)
+2. [Key Features](#-key-features)
+3. [Dataset Information](#-dataset-information)
+4. [Technology Stack](#-technology-stack)
+5. [System Architecture](#-system-architecture)
+6. [Machine Learning Workflow](#-machine-learning-workflow)
+7. [Model Evaluation](#-model-evaluation)
+8. [Application Screenshots](#-application-screenshots)
+9. [API Endpoints](#-api-endpoints)
+10. [Evidence and Validation](#-evidence-and-validation)
+11. [CI/CD Pipeline](#-cicd-pipeline)
+12. [AWS Deployment](#-aws-deployment)
+13. [Local Installation](#-local-installation)
+14. [Docker Deployment](#-docker-deployment)
+15. [Project Structure](#-project-structure)
+16. [Challenges and Solutions](#-challenges-and-solutions)
+17. [Future Improvements](#-future-improvements)
+18. [Learning Outcomes](#-learning-outcomes)
+19. [Author](#-author)
 
 ---
 
 ## 📖 Project Overview
 
-Phishing websites are malicious websites designed to imitate legitimate websites to steal sensitive information, including login credentials, personal information, and financial details.
+Phishing is a cybersecurity threat in which attackers create fraudulent websites that imitate legitimate websites to steal sensitive information, such as login credentials, personal information, and financial details.
 
-This project uses Machine Learning to analyze website-related features and classify websites into two categories:
+This project uses Machine Learning to analyze website-related attributes and classify websites into two categories:
 
-- **Phishing:** Website classified as potentially malicious.
-- **Legitimate:** Website classified as legitimate by the trained model.
+- **Phishing:** A website classified as potentially malicious.
+- **Legitimate:** A website classified as legitimate by the trained model.
 
-The trained Random Forest model is integrated into a FastAPI application. Users can upload CSV files containing website features and receive predictions through the web interface.
+A Random Forest classification model is trained using website feature data and integrated into a FastAPI web application.
 
-The application is containerized using Docker and deployed on AWS EC2. GitHub Actions automates the build and deployment process.
+Users can upload CSV files containing website features and receive predictions through the application.
+
+The application is containerized using Docker and deployed on AWS EC2. GitHub Actions automates the Docker build and deployment workflow.
+
+### Project Highlights
+
+- End-to-end Machine Learning pipeline.
+- 11,055 dataset records and 30 input features.
+- Random Forest binary classification.
+- FastAPI web application.
+- CSV-based batch prediction.
+- MongoDB Atlas integration.
+- Docker containerization.
+- AWS EC2 and Amazon ECR deployment.
+- GitHub Actions automated CI/CD.
 
 ---
 
@@ -51,43 +69,48 @@ The application is containerized using Docker and deployed on AWS EC2. GitHub Ac
 
 - Phishing website detection using Machine Learning.
 - Random Forest classification algorithm.
-- Dataset containing 11,055 records and 30 input features.
 - Automated data ingestion and preprocessing.
-- Model training and prediction pipeline.
+- Model training and evaluation.
 - FastAPI-based web application.
-- CSV-based batch predictions.
+- CSV upload and batch predictions.
+- Prediction results displayed through a web interface.
+- Prediction output available for download.
 - MongoDB Atlas integration.
-- Docker containerization.
-- AWS EC2 deployment.
-- Amazon ECR for Docker image storage.
+- Docker image creation and container management.
+- AWS cloud deployment.
+- Amazon ECR image storage.
 - GitHub Actions CI/CD automation.
 - Application health-check endpoint.
-- Swagger API documentation.
+- Interactive Swagger API documentation.
 
 ---
 
 ## 📊 Dataset Information
 
-The model was trained using a phishing website dataset.
+The Machine Learning model was trained using a phishing website dataset.
 
 | Dataset Attribute | Value |
 |---|---:|
 | Total Records | 11,055 |
+| Training Records | 8,844 |
+| Testing Records | 2,211 |
 | Input Features | 30 |
 | Target Variable | 1 |
 | Total Columns | 31 |
 | Target Column | `Result` |
-| Algorithm | Random Forest Classifier |
 | Problem Type | Binary Classification |
+| ML Algorithm | Random Forest Classifier |
 
 ### Dataset Explanation
 
-- **11,055 records:** Total number of website samples in the dataset.
-- **30 input features:** Website attributes provided to the machine learning model.
-- **1 target variable:** The output column used for classification.
-- **31 total columns:** 30 input features plus one target column.
+- **11,055 records:** Total number of website samples.
+- **30 input features:** Website attributes used by the model.
+- **1 target variable:** Classification label.
+- **31 total columns:** Input features plus the target column.
 
-The model uses the 30 input features to predict whether a website is phishing or legitimate.
+The dataset was divided into training and testing subsets using an 80:20 split.
+
+The model uses 30 input features to predict whether a website is phishing or legitimate.
 
 ---
 
@@ -97,16 +120,16 @@ The model uses the 30 input features to predict whether a website is phishing or
 |---|---|
 | Programming Language | Python |
 | Machine Learning | Scikit-learn |
-| ML Algorithm | Random Forest |
+| Classification Algorithm | Random Forest |
 | Data Processing | Pandas, NumPy |
 | Backend Framework | FastAPI |
 | Database | MongoDB Atlas |
 | Model Serialization | Pickle |
 | API Server | Uvicorn |
 | Containerization | Docker |
-| Cloud Platform | AWS |
+| Cloud Platform | Amazon Web Services |
 | Container Registry | Amazon ECR |
-| Cloud Deployment | Amazon EC2 |
+| Cloud Hosting | Amazon EC2 |
 | CI/CD | GitHub Actions |
 | Version Control | Git, GitHub |
 
@@ -114,7 +137,7 @@ The model uses the 30 input features to predict whether a website is phishing or
 
 ## 🏗️ System Architecture
 
-The following diagram represents the overall application workflow.
+The following architecture illustrates the overall application workflow.
 
 ```mermaid
 flowchart TD
@@ -128,7 +151,7 @@ flowchart TD
 
     E --> F[Trained Random Forest Model]
 
-    F --> G{Prediction}
+    F --> G{Classification Prediction}
 
     G --> H[Phishing Website]
 
@@ -155,52 +178,76 @@ The project follows an end-to-end Machine Learning pipeline.
 6. Random Forest model training.
 7. Model evaluation.
 8. Model serialization.
-9. Prediction using the trained model.
+9. Model loading.
+10. Website classification and prediction.
 
-### Model Information
-
-**Algorithm:** Random Forest Classifier
+### Algorithm: Random Forest Classifier
 
 Random Forest is an ensemble learning algorithm that combines multiple decision trees to perform classification.
 
-The trained model analyzes 30 input features and generates a binary classification prediction.
+The model analyzes 30 input features and generates a binary classification prediction.
+
+### Why Random Forest?
+
+- Combines predictions from multiple decision trees.
+- Supports classification problems.
+- Can capture nonlinear relationships.
+- Provides feature-importance information.
+- Offers a practical approach to structured tabular data.
 
 ---
 
 ## 📈 Model Evaluation
 
-Model evaluation is important to understand how well the classifier performs on unseen data.
+The Random Forest classifier was evaluated using a separate test dataset containing **2,211 records**.
 
-The following metrics should be populated using the actual test-set evaluation results.
+### Evaluation Metrics
 
-| Evaluation Metric | Result |
-|---|---|
-| Accuracy | Add actual result |
-| Precision | Add actual result |
-| Recall | Add actual result |
-| F1-Score | Add actual result |
+| Metric | Score |
+|---|---:|
+| Accuracy | 96.56% |
+| Weighted Precision | 96.56% |
+| Weighted Recall | 96.56% |
+| Weighted F1-Score | 96.56% |
+| ROC-AUC | 99.41% |
 
 ### Confusion Matrix
 
-Add your actual confusion matrix here after model evaluation.
+The model produced the following confusion matrix:
 
 ```text
                  Predicted
-                 Negative    Positive
+                 Class 0    Class 1
 
-Actual Negative     TN          FP
+Actual Class 0      967        42
 
-Actual Positive     FN          TP
+Actual Class 1       34      1168
 ```
 
-### Evaluation Metrics Explanation
+| Actual / Predicted | Class 0 | Class 1 |
+|---|---:|---:|
+| Class 0 | 967 | 42 |
+| Class 1 | 34 | 1,168 |
 
-- **Accuracy:** Measures the proportion of correct predictions.
-- **Precision:** Measures how many predicted phishing cases were actually phishing.
-- **Recall:** Measures how many actual phishing cases were correctly detected.
-- **F1-Score:** Harmonic mean of precision and recall.
+### Test Dataset Distribution
 
-> Evaluation values should be taken from the model's actual test results. Do not use training accuracy as a substitute for test performance.
+| Class | Number of Records |
+|---|---:|
+| Class 0 | 1,009 |
+| Class 1 | 1,202 |
+| Total | 2,211 |
+
+### Evaluation Summary
+
+- The model achieved **96.56% accuracy** on the test dataset.
+- Weighted precision reached **96.56%**.
+- Weighted recall reached **96.56%**.
+- Weighted F1-score reached **96.56%**.
+- ROC-AUC reached **99.41%**.
+
+These results demonstrate the classification performance of the trained Random Forest model on the held-out test dataset.
+
+> Note: Class 0 and Class 1 refer to the original target encoding. Their phishing/legitimate interpretation follows the label mapping used during dataset preprocessing.
 
 ---
 
@@ -208,13 +255,13 @@ Actual Positive     FN          TP
 
 ### 1. Application Home Page
 
-The home page allows users to upload a CSV dataset containing the required input features.
+The home page allows users to upload a CSV dataset containing the required website features.
 
 ![Application Home Page](docs/images/home-page.png)
 
 ### 2. Prediction Results
 
-The application processes uploaded website records and generates predictions.
+The application processes uploaded website records and generates classification predictions.
 
 ![Prediction Results](docs/images/prediction-results.png)
 
@@ -226,13 +273,13 @@ Swagger UI provides interactive API documentation for testing application endpoi
 
 ### 4. GitHub Actions CI/CD Pipeline
 
-GitHub Actions automates the Docker build and deployment workflow.
+GitHub Actions automates the Docker build and application deployment process.
 
 ![GitHub Actions CI/CD Pipeline](docs/images/github-actions-deployment.png)
 
 ### 5. AWS EC2 Deployment
 
-The application is deployed and hosted on an AWS EC2 instance.
+The application is hosted on an AWS EC2 instance using Docker.
 
 ![AWS EC2 Deployment](docs/images/aws-ec2-deployment.png)
 
@@ -261,7 +308,7 @@ The health endpoint checks whether the FastAPI application is running.
 GET /health
 ```
 
-**Example successful response:**
+**Successful response:**
 
 ```json
 {
@@ -271,22 +318,31 @@ GET /health
 }
 ```
 
+### Swagger Documentation
+
+FastAPI provides interactive API documentation.
+
+```text
+http://127.0.0.1:8000/docs
+```
+
 ---
 
 ## 🔍 Evidence and Validation
 
-This section provides evidence of the application's implementation and deployment.
+This section demonstrates the implementation and validation of the application.
 
-### 1. Dataset Evidence
+### 1. Dataset Validation
 
 | Metric | Result |
 |---|---:|
-| Dataset records | 11,055 |
-| Input features | 30 |
-| Target variable | 1 |
-| Total columns | 31 |
+| Total Dataset Records | 11,055 |
+| Training Records | 8,844 |
+| Testing Records | 2,211 |
+| Input Features | 30 |
+| Target Variables | 1 |
 
-### 2. Prediction Evidence
+### 2. Prediction Validation
 
 The application was tested using a CSV file containing 12 website records.
 
@@ -296,7 +352,7 @@ The application was tested using a CSV file containing 12 website records.
 | Phishing | 3 |
 | Total Predictions | 12 |
 
-These results demonstrate the batch prediction workflow.
+The application successfully generated predictions for all 12 records.
 
 ### 3. API Validation
 
@@ -312,9 +368,9 @@ Application Status: Success
 
 ### 4. CI/CD Validation
 
-The configured GitHub Actions deployment workflow completed successfully.
+The configured GitHub Actions workflow completed successfully.
 
-The workflow included:
+The deployment process included:
 
 - Repository checkout.
 - Environment verification.
@@ -324,17 +380,15 @@ The workflow included:
 - EC2 container deployment.
 - Application health check.
 
-![CI/CD Validation](docs/images/github-actions-deployment.png)
-
 ### 5. Cloud Deployment Validation
 
 The application was deployed using AWS EC2 and Docker.
 
-![AWS Deployment Evidence](docs/images/aws-ec2-deployment.png)
+The deployment screenshot demonstrates the EC2 environment used for hosting the application.
 
 ---
 
-## ⚙️ CI/CD Pipeline
+## 🔄 CI/CD Pipeline
 
 GitHub Actions automates the application deployment process.
 
@@ -349,9 +403,9 @@ GitHub Actions automates the application deployment process.
 7. EC2 pulls the latest Docker image.
 8. The existing application container is replaced.
 9. The new Docker container starts.
-10. Health check verifies application availability.
+10. Application health check verifies deployment availability.
 
-### CI/CD Deployment Architecture
+### CI/CD Architecture
 
 ```mermaid
 flowchart TD
@@ -359,32 +413,34 @@ flowchart TD
 
     B --> C[GitHub Actions]
 
-    C --> D[Self Hosted Runner]
+    C --> D[Self-Hosted Runner]
 
     D --> E[Verify Environment]
 
     E --> F[Build Docker Image]
 
-    F --> G[Amazon ECR]
+    F --> G[Authenticate with Amazon ECR]
 
-    G --> H[AWS EC2]
+    G --> H[Push Docker Image]
 
-    H --> I[Pull Latest Image]
+    H --> I[AWS EC2]
 
-    I --> J[Run Docker Container]
+    I --> J[Pull Latest Image]
 
-    J --> K[FastAPI Application]
+    J --> K[Run Docker Container]
 
-    K --> L[Health Check]
+    K --> L[FastAPI Application]
 
-    L --> M[Deployment Successful]
+    L --> M[Health Check]
+
+    M --> N[Deployment Successful]
 ```
 
 ---
 
 ## ☁️ AWS Deployment
 
-The project uses the following AWS services.
+The application is deployed using the following AWS services.
 
 | AWS Service | Purpose |
 |---|---|
@@ -408,7 +464,9 @@ The project uses the following AWS services.
 
 ---
 
-## 💻 Run Locally
+## 💻 Local Installation
+
+Follow these steps to run the project locally.
 
 ### 1. Clone the Repository
 
@@ -570,13 +628,13 @@ Network-Security/
 | Challenge | Solution |
 |---|---|
 | Model deployment | Integrated the trained model into a FastAPI application |
-| Dependency management | Used `requirements.txt` and Docker |
+| Dependency management | Used requirements.txt and Docker |
 | Application containerization | Created a Docker image |
 | Cloud deployment | Deployed the application on AWS EC2 |
 | Docker image storage | Used Amazon ECR |
 | Deployment automation | Configured GitHub Actions |
 | Application verification | Implemented a health-check endpoint |
-| Environment configuration | Used environment variables for application configuration |
+| Environment configuration | Used environment variables |
 
 ---
 
@@ -590,6 +648,7 @@ Network-Security/
 - Add real-time website URL analysis.
 - Integrate additional threat intelligence sources.
 - Add automated model evaluation reports.
+- Implement scheduled model retraining.
 
 ---
 
@@ -600,6 +659,7 @@ Through this project, I gained practical experience in:
 - End-to-end Machine Learning development.
 - Data preprocessing and model training.
 - Binary classification using Random Forest.
+- Model evaluation using classification metrics.
 - Building APIs using FastAPI.
 - MongoDB Atlas integration.
 - Docker image creation and container management.
@@ -628,6 +688,4 @@ M.Tech – Computer Science and Engineering (Artificial Intelligence)
 
 This project is intended for educational and research purposes.
 
-Machine Learning predictions are not a guarantee that a website is safe or malicious. Users should verify suspicious websites using additional security tools.
-
----
+Machine Learning predictions are not a guarantee that a website is safe or malicious. Suspicious websites should be verified using additional security tools.
