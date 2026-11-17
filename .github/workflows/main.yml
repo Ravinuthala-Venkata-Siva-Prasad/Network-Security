@@ -108,44 +108,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-southeast-2
 
-      # Step 3: Validate AWS ECR configuration
-      - name: Validate ECR Configuration
-        env:
-          ECR_REGISTRY: ${{ secrets.AWS_ECR_LOGIN_URI }}
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
-
+      # Step 3: Verify AWS identity
+      - name: Verify AWS Identity
         run: |
-          set -e
-
-          echo "Checking ECR configuration..."
-
-          if [ -z "$ECR_REGISTRY" ]; then
-            echo "ERROR: AWS_ECR_LOGIN_URI is missing"
-            exit 1
-          fi
-
-          if [ -z "$ECR_REPOSITORY" ]; then
-            echo "ERROR: ECR_REPOSITORY_NAME is missing"
-            exit 1
-          fi
-
-          # Remove accidental whitespace and line breaks
-          ECR_REGISTRY="$(echo "$ECR_REGISTRY" | tr -d '[:space:]')"
-          ECR_REPOSITORY="$(echo "$ECR_REPOSITORY" | tr -d '[:space:]')"
-
-          # Validate registry format
-          if [[ ! "$ECR_REGISTRY" =~ ^[0-9]{12}\.dkr\.ecr\.ap-southeast-2\.amazonaws\.com$ ]]; then
-            echo "ERROR: Invalid ECR registry URI"
-            exit 1
-          fi
-
-          # Validate repository name
-          if [[ ! "$ECR_REPOSITORY" =~ ^[a-z0-9]+([._/-][a-z0-9]+)*$ ]]; then
-            echo "ERROR: Invalid ECR repository name"
-            exit 1
-          fi
-
-          echo "ECR registry and repository configuration are valid."
+          aws sts get-caller-identity
 
       # Step 4: Login to Amazon ECR
       - name: Login to Amazon ECR
@@ -153,60 +119,31 @@ jobs:
 
       # Step 5: Build Docker image
       - name: Build Docker Image
-        env:
-          ECR_REGISTRY: ${{ secrets.AWS_ECR_LOGIN_URI }}
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
-          IMAGE_TAG: latest
-
         run: |
-          set -e
+          docker build \
+            -t 316992254617.dkr.ecr.ap-southeast-2.amazonaws.com/networksecurity:latest \
+            .
 
-          ECR_REGISTRY="$(echo "$ECR_REGISTRY" | tr -d '[:space:]')"
-          ECR_REPOSITORY="$(echo "$ECR_REPOSITORY" | tr -d '[:space:]')"
+      # Step 6: Verify Docker image
+      - name: Verify Docker Image
+        run: |
+          docker images
 
-          IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
-
-          echo "Building Docker image..."
-
-          echo "Image repository: ${ECR_REPOSITORY}"
-          echo "Image tag: ${IMAGE_TAG}"
-
-          docker build -t "$IMAGE_URI" .
-
-          echo "Docker image built successfully."
-
-      # Step 6: Push Docker image to ECR
+      # Step 7: Push Docker image to ECR
       - name: Push Docker Image to ECR
-        env:
-          ECR_REGISTRY: ${{ secrets.AWS_ECR_LOGIN_URI }}
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
-          IMAGE_TAG: latest
-
         run: |
-          set -e
+          docker push \
+            316992254617.dkr.ecr.ap-southeast-2.amazonaws.com/networksecurity:latest
 
-          ECR_REGISTRY="$(echo "$ECR_REGISTRY" | tr -d '[:space:]')"
-          ECR_REPOSITORY="$(echo "$ECR_REPOSITORY" | tr -d '[:space:]')"
-
-          IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
-
-          docker push "$IMAGE_URI"
-
-          echo "Docker image pushed successfully."
-
-      # Step 7: Verify image
+      # Step 8: Verify ECR image
       - name: Verify ECR Image
-        env:
-          AWS_REGION: ap-southeast-2
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
-
         run: |
           aws ecr describe-images \
-            --repository-name "$ECR_REPOSITORY" \
+            --repository-name networksecurity \
             --image-ids imageTag=latest \
-            --region "$AWS_REGION"
+            --region ap-southeast-2
 
-          echo "ECR image verification successful."
+          echo "Docker image successfully pushed to ECR"
 
 
 # ==========================================
@@ -222,7 +159,7 @@ jobs:
 
     steps:
 
-      # Step 1: Connect to EC2 and deploy
+      # Step 1: Connect to EC2 using SSH
       - name: Deploy Application to EC2
         uses: appleboy/ssh-action@v1.2.0
 
@@ -235,7 +172,7 @@ jobs:
 
             set -e
 
-            # Login to AWS ECR
+            # Step 1: Login to AWS ECR
             aws ecr get-login-password \
               --region ap-southeast-2 | \
               docker login \
@@ -243,17 +180,17 @@ jobs:
               --password-stdin \
               316992254617.dkr.ecr.ap-southeast-2.amazonaws.com
 
-            # Pull latest Docker image
+            # Step 2: Pull latest Docker image
             docker pull \
               316992254617.dkr.ecr.ap-southeast-2.amazonaws.com/networksecurity:latest
 
-            # Stop existing container
+            # Step 3: Stop existing container
             docker stop network-security-container || true
 
-            # Remove existing container
+            # Step 4: Remove existing container
             docker rm network-security-container || true
 
-            # Run new Docker container
+            # Step 5: Run new Docker container
             docker run -d \
               --name network-security-container \
               --restart always \
@@ -261,10 +198,10 @@ jobs:
               --env-file /home/ubuntu/network-security.env \
               316992254617.dkr.ecr.ap-southeast-2.amazonaws.com/networksecurity:latest
 
-            # Check running container
+            # Step 6: Check running container
             docker ps
 
-            # Display application logs
+            # Step 7: Check application logs
             docker logs --tail 50 network-security-container
 
       # Step 2: Deployment success
