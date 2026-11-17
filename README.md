@@ -62,7 +62,7 @@ Create `docs/images/` and add screenshots with these exact filenames to display 
 
 ```mermaid
 flowchart TD
-    A[CSV with 30 input features] --> B[FastAPI Application]
+    A[CSV with 11055 input features] --> B[FastAPI Application]
     B --> C[Input Validation and DataFrame]
     C --> D[Trained Random Forest Model]
     D --> E[Phishing / Legitimate Predictions]
