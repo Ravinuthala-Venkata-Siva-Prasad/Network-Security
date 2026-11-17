@@ -1,6 +1,6 @@
 # 🛡️ Network Security – Phishing Website Detection using Machine Learning & AWS CI/CD
 
-An end-to-end Machine Learning project that detects phishing websites using a **Random Forest Classifier**. The application integrates FastAPI, MongoDB Atlas, Docker, AWS EC2, Amazon ECR, and GitHub Actions to deliver an automated Machine Learning deployment pipeline.
+An end-to-end Machine Learning and deployment project that detects phishing websites using a **Random Forest Classifier**. The application integrates FastAPI, MongoDB Atlas, Docker, AWS EC2, Amazon ECR, and GitHub Actions to automate the deployment of a Machine Learning application.
 
 <p align="center">
   <img src="docs/images/home-page.png" alt="Network Security Application" width="850">
@@ -14,31 +14,32 @@ An end-to-end Machine Learning project that detects phishing websites using a **
 
 ## 📌 Table of Contents
 
-1. [Project Overview](#-project-overview)
-2. [Key Features](#-key-features)
-3. [Dataset Information](#-dataset-information)
-4. [Technology Stack](#-technology-stack)
-5. [System Architecture](#-system-architecture)
-6. [Machine Learning Workflow](#-machine-learning-workflow)
-7. [Model Evaluation](#-model-evaluation)
-8. [Application Screenshots](#-application-screenshots)
-9. [API Endpoints](#-api-endpoints)
-10. [Evidence and Validation](#-evidence-and-validation)
-11. [CI/CD Pipeline](#-cicd-pipeline)
-12. [AWS Deployment](#-aws-deployment)
-13. [Local Installation](#-local-installation)
-14. [Docker Deployment](#-docker-deployment)
-15. [Project Structure](#-project-structure)
-16. [Challenges and Solutions](#-challenges-and-solutions)
-17. [Future Improvements](#-future-improvements)
-18. [Learning Outcomes](#-learning-outcomes)
-19. [Author](#-author)
+- [Project Overview](#-project-overview)
+- [Key Features](#-key-features)
+- [Dataset Information](#-dataset-information)
+- [Technology Stack](#-technology-stack)
+- [System Architecture](#-system-architecture)
+- [Machine Learning Workflow](#-machine-learning-workflow)
+- [Model Evaluation](#-model-evaluation)
+- [Confusion Matrix](#-confusion-matrix)
+- [Application Screenshots](#-application-screenshots)
+- [API Endpoints](#-api-endpoints)
+- [Evidence and Validation](#-evidence-and-validation)
+- [CI/CD Pipeline](#-cicd-pipeline)
+- [AWS Deployment](#-aws-deployment)
+- [Local Installation](#-local-installation)
+- [Docker Deployment](#-docker-deployment)
+- [Project Structure](#-project-structure)
+- [Challenges and Solutions](#-challenges-and-solutions)
+- [Future Improvements](#-future-improvements)
+- [Learning Outcomes](#-learning-outcomes)
+- [Author](#-author)
 
 ---
 
 ## 📖 Project Overview
 
-Phishing is a cybersecurity threat in which attackers create fraudulent websites that imitate legitimate websites to steal sensitive information, such as login credentials, personal information, and financial details.
+Phishing is a cybersecurity threat in which attackers create fraudulent websites that imitate legitimate websites to steal sensitive information, including login credentials, personal information, and financial details.
 
 This project uses Machine Learning to analyze website-related attributes and classify websites into two categories:
 
@@ -47,7 +48,7 @@ This project uses Machine Learning to analyze website-related attributes and cla
 
 A Random Forest classification model is trained using website feature data and integrated into a FastAPI web application.
 
-Users can upload CSV files containing website features and receive predictions through the application.
+Users can upload CSV files containing website features and receive predictions through the web interface.
 
 The application is containerized using Docker and deployed on AWS EC2. GitHub Actions automates the Docker build and deployment workflow.
 
@@ -95,7 +96,7 @@ The Machine Learning model was trained using a phishing website dataset.
 | Training Records | 8,844 |
 | Testing Records | 2,211 |
 | Input Features | 30 |
-| Target Variable | 1 |
+| Target Variables | 1 |
 | Total Columns | 31 |
 | Target Column | `Result` |
 | Problem Type | Binary Classification |
@@ -106,7 +107,7 @@ The Machine Learning model was trained using a phishing website dataset.
 - **11,055 records:** Total number of website samples.
 - **30 input features:** Website attributes used by the model.
 - **1 target variable:** Classification label.
-- **31 total columns:** Input features plus the target column.
+- **31 total columns:** 30 input features plus one target column.
 
 The dataset was divided into training and testing subsets using an 80:20 split.
 
@@ -142,25 +143,15 @@ The following architecture illustrates the overall application workflow.
 ```mermaid
 flowchart TD
     A[User] --> B[FastAPI Web Application]
-
     B --> C[Upload CSV Dataset]
-
     C --> D[Data Preprocessing]
-
     D --> E[30 Input Features]
-
     E --> F[Trained Random Forest Model]
-
     F --> G{Classification Prediction}
-
     G --> H[Phishing Website]
-
     G --> I[Legitimate Website]
-
     H --> J[Display Prediction Results]
-
     I --> J
-
     J --> K[Download Prediction CSV]
 ```
 
@@ -190,64 +181,91 @@ The model analyzes 30 input features and generates a binary classification predi
 ### Why Random Forest?
 
 - Combines predictions from multiple decision trees.
-- Supports classification problems.
+- Supports binary classification problems.
 - Can capture nonlinear relationships.
 - Provides feature-importance information.
-- Offers a practical approach to structured tabular data.
+- Works well with structured tabular data.
 
 ---
 
 ## 📈 Model Evaluation
 
-The Random Forest classifier was evaluated using a separate test dataset containing **2,211 records**.
+The Random Forest classifier was evaluated on a separate test dataset containing **2,211 records**.
 
 ### Evaluation Metrics
 
 | Metric | Score |
 |---|---:|
-| Accuracy | 96.56% |
-| Weighted Precision | 96.56% |
-| Weighted Recall | 96.56% |
-| Weighted F1-Score | 96.56% |
-| ROC-AUC | 99.41% |
+| Accuracy | **96.56%** |
+| Weighted Precision | **96.56%** |
+| Weighted Recall | **96.56%** |
+| Weighted F1-Score | **96.56%** |
+| ROC-AUC | **99.41%** |
 
-### Confusion Matrix
+### Classification Report
 
-The model produced the following confusion matrix:
+| Class | Precision | Recall | F1-Score | Support |
+|---|---:|---:|---:|---:|
+| 0 | 96.60% | 95.84% | 96.22% | 1,009 |
+| 1 | 96.53% | 97.17% | 96.85% | 1,202 |
+| Macro Average | 96.57% | 96.50% | 96.53% | 2,211 |
+| Weighted Average | 96.56% | 96.56% | 96.56% | 2,211 |
 
-```text
-                 Predicted
-                 Class 0    Class 1
+### Evaluation Summary
 
-Actual Class 0      967        42
+- Test dataset: 2,211 records.
+- Correct predictions: 2,135.
+- Incorrect predictions: 76.
+- Accuracy: 96.56%.
+- ROC-AUC: 99.41%.
 
-Actual Class 1       34      1168
-```
+The model demonstrates strong classification performance on the held-out test dataset.
+
+---
+
+## 🎯 Confusion Matrix
+
+The following visualization represents the actual and predicted classifications of the Random Forest model on the test dataset.
+
+<p align="center">
+  <img src="docs/images/confusion_matrix.png"
+       alt="Network Security Random Forest Confusion Matrix"
+       width="650">
+</p>
+
+### Confusion Matrix Values
 
 | Actual / Predicted | Class 0 | Class 1 |
 |---|---:|---:|
 | Class 0 | 967 | 42 |
 | Class 1 | 34 | 1,168 |
 
-### Test Dataset Distribution
+### Interpretation
 
-| Class | Number of Records |
-|---|---:|
-| Class 0 | 1,009 |
-| Class 1 | 1,202 |
-| Total | 2,211 |
+- 967 Class 0 records were correctly classified as Class 0.
+- 42 Class 0 records were incorrectly classified as Class 1.
+- 34 Class 1 records were incorrectly classified as Class 0.
+- 1,168 Class 1 records were correctly classified as Class 1.
 
-### Evaluation Summary
+**Total test records:** 2,211
 
-- The model achieved **96.56% accuracy** on the test dataset.
-- Weighted precision reached **96.56%**.
-- Weighted recall reached **96.56%**.
-- Weighted F1-score reached **96.56%**.
-- ROC-AUC reached **99.41%**.
+> Class 0 and Class 1 follow the original target-label encoding used during model training. Their phishing/legitimate interpretation depends on the original label mapping.
 
-These results demonstrate the classification performance of the trained Random Forest model on the held-out test dataset.
+### Download Evaluation Report
 
-> Note: Class 0 and Class 1 refer to the original target encoding. Their phishing/legitimate interpretation follows the label mapping used during dataset preprocessing.
+The complete model evaluation results are also available in JSON format.
+
+📄 [View Model Evaluation Report](reports/evaluation_report.json)
+
+The JSON report contains:
+
+- Accuracy
+- Precision
+- Recall
+- F1-Score
+- ROC-AUC
+- Classification report
+- Confusion matrix
 
 ---
 
@@ -308,7 +326,7 @@ The health endpoint checks whether the FastAPI application is running.
 GET /health
 ```
 
-**Successful response:**
+**Successful Response:**
 
 ```json
 {
@@ -352,7 +370,7 @@ The application was tested using a CSV file containing 12 website records.
 | Phishing | 3 |
 | Total Predictions | 12 |
 
-The application successfully generated predictions for all 12 records.
+The application generated predictions for all 12 records.
 
 ### 3. API Validation
 
@@ -384,8 +402,6 @@ The deployment process included:
 
 The application was deployed using AWS EC2 and Docker.
 
-The deployment screenshot demonstrates the EC2 environment used for hosting the application.
-
 ---
 
 ## 🔄 CI/CD Pipeline
@@ -410,29 +426,17 @@ GitHub Actions automates the application deployment process.
 ```mermaid
 flowchart TD
     A[Developer Code Push] --> B[GitHub Repository]
-
     B --> C[GitHub Actions]
-
     C --> D[Self-Hosted Runner]
-
     D --> E[Verify Environment]
-
     E --> F[Build Docker Image]
-
     F --> G[Authenticate with Amazon ECR]
-
     G --> H[Push Docker Image]
-
     H --> I[AWS EC2]
-
     I --> J[Pull Latest Image]
-
     J --> K[Run Docker Container]
-
     K --> L[FastAPI Application]
-
     L --> M[Health Check]
-
     M --> N[Deployment Successful]
 ```
 
@@ -488,13 +492,13 @@ python -m venv venv
 
 ### 4. Activate the Virtual Environment
 
-Windows:
+**Windows:**
 
 ```bash
 venv\Scripts\activate
 ```
 
-Linux:
+**Linux:**
 
 ```bash
 source venv/bin/activate
@@ -527,19 +531,19 @@ python app.py
 
 ### 8. Access the Application
 
-Home Page:
+**Home Page:**
 
 ```text
 http://127.0.0.1:8000/
 ```
 
-Swagger Documentation:
+**Swagger Documentation:**
 
 ```text
 http://127.0.0.1:8000/docs
 ```
 
-Health Check:
+**Health Check:**
 
 ```text
 http://127.0.0.1:8000/health
@@ -598,6 +602,9 @@ Network-Security/
 │
 ├── prediction_output/
 │
+├── reports/
+│   └── evaluation_report.json
+│
 ├── templates/
 │   ├── index.html
 │   └── table.html
@@ -618,7 +625,8 @@ Network-Security/
         ├── prediction-results.png
         ├── swagger-api.png
         ├── github-actions-deployment.png
-        └── aws-ec2-deployment.png
+        ├── aws-ec2-deployment.png
+        └── confusion_matrix.png
 ```
 
 ---
