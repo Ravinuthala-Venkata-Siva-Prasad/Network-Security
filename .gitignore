@@ -1,26 +1,46 @@
-# Virtual Environment
+# Python virtual environments
 .venv/
 venv/
+env/
 
 # Python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# Environment files
+# Environment secrets
 .env
+.env.*
+*.env
 
-# Generated package files
+# Build files
 *.egg-info/
 build/
 dist/
 
 # IDE
 .vscode/
+.idea/
 
 # Jupyter
 .ipynb_checkpoints/
 
-logs
-Artifacts
-final_model
-mlruns
+# Logs
+logs/
+*.log
+
+# MLflow
+mlruns/
+mlflow.db
+
+# Generated output
+prediction_output/*
+!prediction_output/.gitkeep
+
+# CI virtual environment
+.ci-venv/
+
+# Temporary files
+*.tmp
+*.bak

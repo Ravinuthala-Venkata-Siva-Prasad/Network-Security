@@ -1,4 +1,4 @@
-name: Deploy Network Security to AWS EC2
+name: Network Security CI CD Pipeline
 
 on:
   push:
@@ -10,137 +10,252 @@ on:
 permissions:
   contents: read
 
+env:
+  AWS_REGION: ap-southeast-2
+  AWS_ACCOUNT_ID: "316992254617"
+  ECR_REPOSITORY: networksecurity
+  CONTAINER_NAME: network-security-container
+
 jobs:
 
-  # ==========================================
-  # JOB 1: BUILD AND PUSH DOCKER IMAGE TO ECR
-  # ==========================================
+  deploy:
 
-  build-and-push:
+    name: Build and Deploy Network Security
 
-    name: Build and Push to AWS ECR
+    runs-on: [self-hosted, linux, x64]
 
-    runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
 
-      # Step 1: Checkout GitHub repository
+      # =====================================
+      # 1. CHECKOUT REPOSITORY
+      # =====================================
 
       - name: Checkout Repository
         uses: actions/checkout@v4
 
 
-      # Step 2: Configure AWS credentials
+      # =====================================
+      # 2. CHECK ENVIRONMENT
+      # =====================================
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Check Environment
+        run: |
 
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-southeast-2
+          echo "Checking EC2 environment"
 
+          python3 --version
 
-      # Step 3: Verify AWS account
+          docker --version
 
-      - name: Verify AWS Identity
-        run: aws sts get-caller-identity
+          aws --version
 
 
-      # Step 4: Login to Amazon ECR
+      # =====================================
+      # 3. VERIFY MODEL
+      # =====================================
+
+      - name: Verify Model File
+        run: |
+
+          test -f final_model/model.pkl
+
+          echo "Trained model found"
+
+
+      # =====================================
+      # 4. CREATE PYTHON VIRTUAL ENVIRONMENT
+      # =====================================
+
+      - name: Setup Test Environment
+        run: |
+
+          python3 -m venv .ci-venv
+
+          .ci-venv/bin/python -m pip install --upgrade pip
+
+          .ci-venv/bin/pip install pytest
+
+
+      # =====================================
+      # 5. RUN TESTS
+      # =====================================
+
+      - name: Run Pytest
+        run: |
+
+          .ci-venv/bin/python -m pytest tests/ -v
+
+
+      # =====================================
+      # 6. VERIFY AWS IDENTITY
+      # =====================================
+
+      - name: Verify AWS Credentials
+        run: |
+
+          aws sts get-caller-identity
+
+
+      # =====================================
+      # 7. LOGIN TO AMAZON ECR
+      # =====================================
 
       - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
+        run: |
+
+          aws ecr get-login-password \
+            --region $AWS_REGION | \
+          docker login \
+            --username AWS \
+            --password-stdin \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
 
-      # Step 5: Build Docker image
+      # =====================================
+      # 8. BUILD DOCKER IMAGE
+      # =====================================
 
       - name: Build Docker Image
         run: |
-          docker build -t networksecurity:latest .
+
+          docker build \
+            --pull \
+            -t $ECR_REPOSITORY:latest \
+            .
 
 
-      # Step 6: Tag Docker image
+      # =====================================
+      # 9. TAG DOCKER IMAGE
+      # =====================================
 
       - name: Tag Docker Image
         run: |
-          docker tag networksecurity:latest \
-          316992254617.dkr.ecr.ap-southeast-2.amazonaws.com/networksecurity:latest
+
+          docker tag \
+            $ECR_REPOSITORY:latest \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
 
 
-      # Step 7: Push Docker image to ECR
+      # =====================================
+      # 10. PUSH IMAGE TO ECR
+      # =====================================
 
-      - name: Push Docker Image to ECR
+      - name: Push Docker Image
         run: |
+
           docker push \
-          316992254617.dkr.ecr.ap-southeast-2.amazonaws.com/networksecurity:latest
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
 
 
-  # ==========================================
-  # JOB 2: DEPLOY APPLICATION TO AWS EC2
-  # ==========================================
+      # =====================================
+      # 11. VERIFY ENVIRONMENT FILE
+      # =====================================
 
-  deploy:
+      - name: Verify Environment File
+        run: |
 
-    name: Deploy to AWS EC2
+          test -f /home/ubuntu/network-security.env
 
-    needs: build-and-push
+          echo "Environment file found"
 
-    runs-on: ubuntu-latest
 
-    steps:
+      # =====================================
+      # 12. PULL LATEST IMAGE
+      # =====================================
 
-      # Step 1: Connect to EC2 and deploy
+      - name: Pull Latest Image
+        run: |
 
-      - name: Deploy Application to EC2
-        uses: appleboy/ssh-action@v1.2.0
+          docker pull \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
 
-        with:
 
-          host: ${{ secrets.EC2_HOST }}
+      # =====================================
+      # 13. STOP OLD CONTAINER
+      # =====================================
 
-          username: ubuntu
+      - name: Stop Existing Container
+        run: |
 
-          key: ${{ secrets.EC2_SSH_KEY }}
+          docker stop $CONTAINER_NAME || true
 
-          port: 22
+          docker rm $CONTAINER_NAME || true
 
-          script: |
 
-            echo "Starting deployment..."
+      # =====================================
+      # 14. DEPLOY NEW CONTAINER
+      # =====================================
 
-            # Login to AWS ECR using EC2 IAM Role
+      - name: Run Docker Container
+        run: |
 
-            aws ecr get-login-password --region ap-southeast-2 | \
-            docker login \
-            --username AWS \
-            --password-stdin \
-            316992254617.dkr.ecr.ap-southeast-2.amazonaws.com
+          docker run -d \
+            --name $CONTAINER_NAME \
+            --restart always \
+            -p 8000:8000 \
+            --env-file /home/ubuntu/network-security.env \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
 
-            # Pull latest Docker image
 
-            docker pull \
-            316992254617.dkr.ecr.ap-southeast-2.amazonaws.com/networksecurity:latest
+      # =====================================
+      # 15. VERIFY CONTAINER
+      # =====================================
 
-            # Stop existing container
+      - name: Verify Container
+        run: |
 
-            docker stop network-security-container || true
+          docker ps --filter "name=$CONTAINER_NAME"
 
-            # Remove existing container
+          docker inspect \
+            --format='{{.State.Status}}' \
+            $CONTAINER_NAME
 
-            docker rm network-security-container || true
 
-            # Start new container
+      # =====================================
+      # 16. APPLICATION HEALTH CHECK
+      # =====================================
 
-            docker run -d \
-              --name network-security-container \
-              --restart always \
-              -p 8000:8000 \
-              --env-file /home/ubuntu/network-security.env \
-              316992254617.dkr.ecr.ap-southeast-2.amazonaws.com/networksecurity:latest
+      - name: Application Health Check
+        run: |
 
-            # Check container status
+          for i in {1..30}; do
 
-            docker ps
+            if python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"; then
 
-            echo "Deployment completed successfully!"
+              echo "Application is healthy"
+
+              exit 0
+
+            fi
+
+            echo "Waiting for application..."
+
+            sleep 5
+
+          done
+
+          echo "Application failed to start"
+
+          docker logs $CONTAINER_NAME
+
+          exit 1
+
+
+      # =====================================
+      # 17. DEPLOYMENT SUCCESS
+      # =====================================
+
+      - name: Deployment Successful
+        run: |
+
+          echo "================================"
+
+          echo "NETWORK SECURITY DEPLOYED"
+
+          echo "================================"
+
+          echo "Docker deployment completed"
+
+          echo "Port: 8000"

@@ -1,5 +1,6 @@
 import os
 import sys
+import secrets
 
 import certifi
 import pymongo
@@ -11,7 +12,9 @@ from fastapi import (
     FastAPI,
     File,
     UploadFile,
-    Request
+    Request,
+    Header,
+    HTTPException
 )
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -38,10 +41,6 @@ from src.constant.training_pipeline import (
     DATA_INGESTION_DATABASE_NAME
 )
 
-
-# ============================================================
-# STEP 1: PROJECT CONFIGURATION
-# ============================================================
 
 BASE_DIR = os.path.dirname(
     os.path.abspath(__file__)
@@ -73,58 +72,53 @@ os.makedirs(
 )
 
 
-# ============================================================
-# STEP 2: PREDICTION LABEL CONFIGURATION
-# ============================================================
-
-# ASSUMPTION:
-# Original dataset: -1 = Phishing, 1 = Legitimate
-# Data transformation: -1 becomes 0
-#
-# Therefore:
-# 0 = Phishing
-# 1 = Legitimate
-#
-# Verify this against your original dataset documentation.
-
 PREDICTION_LABELS = {
     0: "Phishing",
     1: "Legitimate"
 }
 
 
-# ============================================================
-# STEP 3: ENVIRONMENT CONFIGURATION
-# ============================================================
-
 load_dotenv(
     os.path.join(BASE_DIR, ".env")
 )
 
-mongo_db_url = os.getenv(
+MONGO_DB_URL = os.getenv(
     "MONGO_DB_URL"
 )
 
-if not mongo_db_url:
+TRAINING_API_KEY = os.getenv(
+    "TRAINING_API_KEY"
+)
+
+CORS_ORIGINS = os.getenv(
+    "CORS_ORIGINS",
+    ""
+)
+
+ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in CORS_ORIGINS.split(",")
+    if origin.strip()
+]
+
+if not MONGO_DB_URL:
 
     raise ValueError(
-        "MONGO_DB_URL is missing from the .env file"
+        "MONGO_DB_URL is missing from environment variables"
     )
 
-ca = certifi.where()
-
-
-# ============================================================
-# STEP 4: MONGODB CONNECTION
-# ============================================================
 
 try:
 
+    ca = certifi.where()
+
     client = pymongo.MongoClient(
-        mongo_db_url,
+        MONGO_DB_URL,
         tlsCAFile=ca,
         serverSelectionTimeoutMS=5000
     )
+
+    # Verify MongoDB connection
 
     client.admin.command("ping")
 
@@ -151,63 +145,68 @@ except Exception as e:
         sys
     )
 
-
-# ============================================================
-# STEP 5: FASTAPI APPLICATION
-# ============================================================
-
 app = FastAPI(
+
     title="Network Security - Phishing Website Detection",
-    description="Machine Learning API for detecting phishing websites",
-    version="1.0.0"
+
+    description=(
+        "Machine Learning API for detecting "
+        "phishing websites using a trained ML model."
+    ),
+
+    version="2.0.0"
 )
 
-
-# ============================================================
-# STEP 6: CORS CONFIGURATION
-# ============================================================
 
 app.add_middleware(
+
     CORSMiddleware,
-    allow_origins=["*"],
+
+    allow_origins=ALLOWED_ORIGINS,
+
     allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"]
+
+    allow_methods=[
+        "GET",
+        "POST"
+    ],
+
+    allow_headers=[
+        "Content-Type",
+        "Authorization"
+    ]
+
 )
 
-
-# ============================================================
-# STEP 7: HTML TEMPLATE CONFIGURATION
-# ============================================================
 
 templates = Jinja2Templates(
+
     directory=TEMPLATE_DIR
+
 )
 
-
-# ============================================================
-# STEP 8: HOME ROUTE
-# ============================================================
 
 @app.get(
     "/",
     tags=["Home"]
 )
 
-async def index(request: Request):
+async def index(
+    request: Request
+):
 
     return templates.TemplateResponse(
+
         request=request,
+
         name="index.html",
+
         context={
             "request": request
         }
+
     )
 
-
-# ============================================================
-# STEP 9: HEALTH CHECK
-# ============================================================
 
 @app.get(
     "/health",
@@ -217,23 +216,61 @@ async def index(request: Request):
 async def health_check():
 
     return {
+
         "status": "success",
+
         "application": "Network Security",
-        "message": "API is running successfully"
+
+        "message": "API is running successfully",
+
+        "model_available": os.path.exists(
+            MODEL_FILE_PATH
+        )
+
     }
 
 
-# ============================================================
-# STEP 10: MODEL TRAINING
-# ============================================================
-
-@app.get(
+@app.post(
     "/train",
     tags=["Training"]
 )
 
-async def train_route():
+async def train_route(
 
+    x_training_key: str | None = Header(
+        default=None
+    )
+
+):
+
+
+    if not TRAINING_API_KEY:
+
+        raise HTTPException(
+
+            status_code=503,
+
+            detail="Training endpoint is disabled"
+
+        )
+
+    if not x_training_key or not secrets.compare_digest(
+
+        x_training_key,
+
+        TRAINING_API_KEY
+
+    ):
+
+        raise HTTPException(
+
+            status_code=401,
+
+            detail="Unauthorized training request"
+
+        )
+
+   
     try:
 
         logging.info(
@@ -249,11 +286,19 @@ async def train_route():
         )
 
         return JSONResponse(
+
             status_code=200,
+
             content={
+
                 "status": "success",
-                "message": "Model training completed successfully"
+
+                "message": (
+                    "Model training completed successfully"
+                )
+
             }
+
         )
 
     except Exception as e:
@@ -268,18 +313,17 @@ async def train_route():
         )
 
 
-# ============================================================
-# STEP 11: PREDICTION ROUTE
-# ============================================================
-
 @app.post(
     "/predict",
     tags=["Prediction"]
 )
 
 async def predict_route(
+
     request: Request,
+
     file: UploadFile = File(...)
+
 ):
 
     try:
@@ -288,99 +332,97 @@ async def predict_route(
             "Prediction request received"
         )
 
-        # ----------------------------------------------------
-        # STEP 1: VALIDATE FILE
-        # ----------------------------------------------------
-
         if not file.filename:
 
-            return JSONResponse(
+            raise HTTPException(
+
                 status_code=400,
-                content={
-                    "status": "failed",
-                    "message": "Please select a CSV file"
-                }
+
+                detail="Please select a CSV file"
+
             )
 
         if not file.filename.lower().endswith(".csv"):
 
-            return JSONResponse(
-                status_code=400,
-                content={
-                    "status": "failed",
-                    "message": "Only CSV files are accepted"
-                }
-            )
+            raise HTTPException(
 
-        # ----------------------------------------------------
-        # STEP 2: READ CSV
-        # ----------------------------------------------------
+                status_code=400,
+
+                detail="Only CSV files are accepted"
+
+            )
 
         try:
 
-            df = pd.read_csv(file.file)
+            df = pd.read_csv(
+                file.file
+            )
 
-        except Exception:
+        except Exception as e:
 
-            return JSONResponse(
+            logging.exception(
+                "Unable to read uploaded CSV"
+            )
+
+            raise HTTPException(
+
                 status_code=400,
-                content={
-                    "status": "failed",
-                    "message": "Unable to read CSV file"
-                }
+
+                detail="Unable to read CSV file"
+
             )
 
         if df.empty:
 
-            return JSONResponse(
+            raise HTTPException(
+
                 status_code=400,
-                content={
-                    "status": "failed",
-                    "message": "Uploaded CSV file is empty"
-                }
+
+                detail="Uploaded CSV file is empty"
+
             )
 
         logging.info(
             f"Input dataset shape: {df.shape}"
         )
 
-        # ----------------------------------------------------
-        # STEP 3: CHECK MODEL
-        # ----------------------------------------------------
-
+       
         if not os.path.exists(MODEL_FILE_PATH):
 
-            return JSONResponse(
+            raise HTTPException(
+
                 status_code=404,
-                content={
-                    "status": "failed",
-                    "message": "Trained model not found. Please train the model first."
-                }
+
+                detail=(
+                    "Trained model not found. "
+                    "Please deploy the trained model first."
+                )
+
             )
 
-        # ----------------------------------------------------
-        # STEP 4: LOAD TRAINED MODEL
-        # ----------------------------------------------------
-
         network_model = load_object(
+
             file_path=MODEL_FILE_PATH
+
         )
 
         logging.info(
             f"Loaded model type: {type(network_model)}"
         )
 
-        if not hasattr(network_model, "predict"):
+        if not hasattr(
+            network_model,
+            "predict"
+        ):
 
             raise TypeError(
                 "Loaded model does not contain a predict method"
             )
 
-        # ----------------------------------------------------
-        # STEP 5: GENERATE PREDICTIONS
-        # ----------------------------------------------------
-
-        y_pred = network_model.predict(df)
+       
+        y_pred = network_model.predict(
+            df
+        )
 
         if len(y_pred) != len(df):
 
@@ -392,38 +434,42 @@ async def predict_route(
             f"Predictions generated: {len(y_pred)}"
         )
 
-        # ----------------------------------------------------
-        # STEP 6: VALIDATE PREDICTION CLASSES
-        # ----------------------------------------------------
-
         prediction_values = [
-            int(value) for value in y_pred
+
+            int(value)
+
+            for value in y_pred
+
         ]
 
-        invalid_predictions = set(
-            prediction_values
-        ) - set(PREDICTION_LABELS.keys())
+        invalid_predictions = (
+
+            set(prediction_values)
+
+            -
+
+            set(PREDICTION_LABELS.keys())
+
+        )
 
         if invalid_predictions:
 
             raise ValueError(
-                f"Unexpected prediction classes: {invalid_predictions}"
-            )
 
-        # ----------------------------------------------------
-        # STEP 7: ADD PREDICTIONS
-        # ----------------------------------------------------
+                f"Unexpected prediction classes: "
+                f"{invalid_predictions}"
+
+            )
 
         df["predicted_column"] = prediction_values
 
         df["prediction_result"] = [
-            PREDICTION_LABELS[value]
-            for value in prediction_values
-        ]
 
-        # ----------------------------------------------------
-        # STEP 8: CALCULATE STATISTICS
-        # ----------------------------------------------------
+            PREDICTION_LABELS[value]
+
+            for value in prediction_values
+
+        ]
 
         total_records = len(df)
 
@@ -432,13 +478,19 @@ async def predict_route(
         legitimate_count = prediction_values.count(1)
 
         phishing_percentage = round(
+
             (phishing_count / total_records) * 100,
+
             2
+
         )
 
         legitimate_percentage = round(
+
             (legitimate_count / total_records) * 100,
+
             2
+
         )
 
         logging.info(
@@ -453,41 +505,37 @@ async def predict_route(
             f"Legitimate: {legitimate_count}"
         )
 
-        # ----------------------------------------------------
-        # STEP 9: SAVE PREDICTIONS
-        # ----------------------------------------------------
-
         output_file_path = os.path.join(
+
             PREDICTION_OUTPUT_DIR,
+
             "output.csv"
+
         )
 
         df.to_csv(
+
             output_file_path,
+
             index=False
+
         )
 
         logging.info(
             f"Prediction output saved: {output_file_path}"
         )
 
-        # ----------------------------------------------------
-        # STEP 10: PREPARE HTML TABLE DATA
-        # ----------------------------------------------------
-
         columns = df.columns.tolist()
 
         records = df.to_dict(
             orient="records"
         )
-
-        # ----------------------------------------------------
-        # STEP 11: RETURN DASHBOARD
-        # ----------------------------------------------------
-
         return templates.TemplateResponse(
+
             request=request,
+
             name="table.html",
+
             context={
 
                 "request": request,
@@ -509,7 +557,12 @@ async def predict_route(
                 "legitimate_percentage": legitimate_percentage
 
             }
+
         )
+
+    except HTTPException:
+
+        raise
 
     except Exception as e:
 
@@ -526,11 +579,6 @@ async def predict_route(
 
         await file.close()
 
-
-# ============================================================
-# STEP 12: DOWNLOAD PREDICTION CSV
-# ============================================================
-
 @app.get(
     "/download",
     tags=["Prediction"]
@@ -539,35 +587,43 @@ async def predict_route(
 async def download_predictions():
 
     output_file_path = os.path.join(
+
         PREDICTION_OUTPUT_DIR,
+
         "output.csv"
+
     )
 
     if not os.path.exists(output_file_path):
 
-        return JSONResponse(
+        raise HTTPException(
+
             status_code=404,
-            content={
-                "status": "failed",
-                "message": "Prediction output not found"
-            }
+
+            detail="Prediction output not found"
+
         )
 
     return FileResponse(
+
         path=output_file_path,
+
         filename="phishing_prediction_results.csv",
+
         media_type="text/csv"
+
     )
-
-
-# ============================================================
-# STEP 13: APPLICATION EXECUTION
-# ============================================================
 
 if __name__ == "__main__":
 
     app_run(
+
         app,
+
         host="0.0.0.0",
-        port=8000
+
+        port=8000,
+
+        reload=False
+
     )
