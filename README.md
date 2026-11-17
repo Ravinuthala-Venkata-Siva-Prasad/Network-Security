@@ -1,345 +1,236 @@
-<div align="center">
+# Network Security – Phishing Website Detection using Machine Learning & AWS CI/CD
 
-# 🛡️ Network Security — Phishing Website Detection
+An end-to-end machine-learning application that classifies website records as **phishing** or **legitimate**. The project combines a Random Forest model, FastAPI, MongoDB Atlas, Docker, AWS, and GitHub Actions CI/CD.
 
-### An end-to-end Machine Learning application with FastAPI, MongoDB Atlas, Docker, AWS, and GitHub Actions CI/CD
+> **Dataset:** 11,055 records, 30 input features, and 1 target column (`Result`).  
+> The 11,055 value is the number of records (rows), not the number of features.
 
-[![Python](https://img.shields.io/badge/Python-3.10-blue?logo=python)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
-[![Docker](https://img.shields.io/badge/Container-Docker-2496ED?logo=docker)](https://www.docker.com/)
-[![AWS](https://img.shields.io/badge/Cloud-AWS-232F3E?logo=amazonaws)](https://aws.amazon.com/)
-[![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-2088FF?logo=githubactions)](https://github.com/features/actions)
-[![MongoDB](https://img.shields.io/badge/Database-MongoDB_Atlas-47A248?logo=mongodb)](https://www.mongodb.com/atlas)
+## Application screenshots
 
-</div>
+### 1. Application home page
 
----
+![Network Security application home page](docs/images/home-page.png)
 
-## 📌 Project Overview
+### 2. Prediction results page
 
-**Network Security** is a machine-learning-based phishing website detection project. It uses a trained **Random Forest classifier** to classify website records from a CSV file as **Phishing** or **Legitimate**, based on 30 input features.
+![Phishing website prediction results](docs/images/prediction-results.png)
 
-The model is served through a **FastAPI** web application. Users can upload a CSV file, generate predictions, view the prediction summary, and download the prediction output.
+### 3. FastAPI Swagger documentation
 
-The project also includes a machine-learning pipeline and an automated deployment workflow using **Docker, Amazon ECR, Amazon EC2, and GitHub Actions**. MongoDB Atlas is used for database connectivity, while MLflow and DagsHub are included in the project dependencies for experiment tracking.
+![FastAPI Swagger API documentation](docs/images/swagger-api.png)
 
-> **Important:** This application classifies feature records supplied in a CSV. It does not establish that a website is safe, and a prediction should not be treated as a security guarantee.
+### 4. GitHub Actions CI/CD pipeline
 
-## ✨ Key Features
+![GitHub Actions CI/CD pipeline run](docs/images/github-actions-deployment.png)
 
-- **Phishing classification:** Random Forest model predicts phishing or legitimate classes.
-- **CSV upload:** Submit a CSV containing the model's expected 30 input features.
-- **Batch prediction:** Generate predictions for multiple records in one request.
-- **Results dashboard:** View the number of uploaded records and generated predictions.
-- **CSV export:** Download the generated prediction output.
-- **FastAPI endpoints:** Application, health, training, prediction, and download routes.
-- **MongoDB Atlas integration:** Connect the application to MongoDB Atlas.
-- **ML pipeline:** Project source includes data ingestion, validation, transformation, and model-training components.
-- **Docker containerization:** Package the application and its dependencies into a Docker image.
-- **AWS deployment:** Store the image in Amazon ECR and run the container on Amazon EC2.
-- **GitHub Actions CI/CD:** Automate build and deployment when the workflow is triggered.
+### 5. AWS EC2 deployment
 
-## 🖥️ Application Screenshots
+![AWS EC2 instance deployment](docs/images/aws-ec2-deployment.png)
 
-Create `docs/images/` and add screenshots with these exact filenames to display them here.
+## System architecture
 
-### Home page
-![Network Security home page](docs/images/home-page.png)
+![System architecture](docs/images/system-architecture.png)
 
-### Prediction results
-![Phishing prediction results dashboard](docs/images/prediction-results.png)
+## CI/CD deployment flow
 
-### API documentation
-![FastAPI Swagger documentation](docs/images/swagger-api.png)
+![CI/CD deployment flow](docs/images/cicd-deployment.png)
 
-### GitHub Actions deployment
-![GitHub Actions successful deployment](docs/images/github-actions-deployment.png)
+## Project overview
 
-### AWS deployment
-![AWS EC2 deployment](docs/images/aws-ec2-deployment.png)
+The application accepts website-feature data, preprocesses the input, and passes the 30 features to a trained Random Forest classifier. It then presents the classification result and supports CSV-based batch prediction.
 
-## 🏗️ System Architecture
+### Key features
 
-```mermaid
-flowchart TD
-    A[CSV with 30 input features] --> B[FastAPI Application]
-    B --> C[Input Validation and DataFrame]
-    C --> D[Trained Random Forest Model]
-    D --> E[Phishing / Legitimate Predictions]
-    E --> F[Prediction Results Dashboard]
-    E --> G[Prediction CSV Download]
-    B <--> H[(MongoDB Atlas)]
-    I[GitHub Repository] --> J[GitHub Actions Workflow]
-    J --> K[Build Docker Image]
-    K --> L[Amazon ECR]
-    L --> M[Amazon EC2]
-    M --> N[Docker Container]
-    N --> B
-```
+- Binary classification: phishing vs. legitimate
+- Random Forest machine-learning model
+- FastAPI web application and API documentation
+- CSV upload and batch prediction workflow
+- MongoDB Atlas integration (if enabled in the application configuration)
+- Docker containerization
+- AWS EC2 hosting and Amazon ECR image registry
+- GitHub Actions deployment automation
 
-### CI/CD deployment flow
+## Dataset
 
-```mermaid
-flowchart LR
-    A[Push to main] --> B[GitHub Actions]
-    B --> C[Self-hosted EC2 Runner]
-    C --> D[Build and Test]
-    D --> E[Build Docker Image]
-    E --> F[Push Image to Amazon ECR]
-    F --> G[Pull Image on EC2]
-    G --> H[Run Docker Container]
-    H --> I[HTTP Health Check]
-```
+| Attribute | Value |
+|---|---:|
+| Total records | 11,055 |
+| Input features | 30 |
+| Target columns | 1 |
+| Total columns | 31 |
+| Target column | `Result` |
+| Problem type | Binary classification |
+| Algorithm | Random Forest Classifier |
 
-## 🧰 Technology Stack
+The target-label interpretation (which numeric value represents phishing or legitimate) should match the label mapping used in the training code. Verify that mapping before describing numeric labels in a report.
 
-| Category | Technologies |
+## Technology stack
+
+| Area | Technology |
 |---|---|
-| Programming language | Python 3.10 |
-| Machine learning | Scikit-learn, Random Forest |
+| Language | Python |
 | Data processing | Pandas, NumPy |
-| API | FastAPI, Uvicorn |
-| Front end | HTML templates rendered with Jinja2 |
-| Database | MongoDB Atlas, PyMongo |
-| Experiment tracking dependencies | MLflow, DagsHub |
+| Machine learning | Scikit-learn |
+| Classifier | Random Forest |
+| API / backend | FastAPI, Uvicorn |
+| Database | MongoDB Atlas |
 | Containerization | Docker |
-| Cloud | AWS EC2, Amazon ECR |
-| CI/CD | GitHub Actions, self-hosted runner |
-| Configuration | python-dotenv |
-| TLS certificates | Certifi |
+| Cloud hosting | AWS EC2 |
+| Container registry | Amazon ECR |
+| CI/CD | GitHub Actions |
+| Version control | Git, GitHub |
 
-## 🔍 How It Works
+## Application endpoints
 
-1. Prepare a CSV file containing the **30 features expected by the trained model**.
-2. Upload the CSV through the web application.
-3. FastAPI reads the file into a Pandas DataFrame.
-4. The application loads the trained model from `final_model/model.pkl`.
-5. The model generates a prediction for each row.
-6. The application adds prediction fields to the output.
-7. The results page displays the prediction summary.
-8. Download the generated CSV for further analysis.
+The following are the routes shown in the project's API documentation. Confirm the method and behavior in the current application code if you change the API.
 
-The prediction output includes:
-
-- `predicted_column` — numerical model output.
-- `prediction_result` — human-readable prediction label.
-
-The current application mapping is **0 = Phishing** and **1 = Legitimate**. Verify this mapping against the label transformation used during model training before relying on the result.
-
-## 🔌 API Endpoints
-
-| Method | Endpoint | Purpose |
+| Endpoint | Method | Purpose |
 |---|---|---|
-| `GET` | `/` | Displays the application home page |
-| `GET` | `/health` | Returns application health status |
-| `GET` | `/train` | Invokes the model training pipeline |
-| `POST` | `/predict` | Accepts a CSV upload and generates predictions |
-| `GET` | `/download` | Downloads the generated prediction CSV |
+| `/` | GET | Home / index |
+| `/health` | GET | Health check |
+| `/docs` | GET | Swagger API documentation |
+| `/train` | GET | Training route |
+| `/predict` | POST | Prediction route |
+| `/download` | GET | Download predictions |
 
-Swagger UI:
-
-```text
-http://<HOST>:8000/docs
-```
-
-Health check:
-
-```text
-http://<HOST>:8000/health
-```
-
-Example successful health response:
-
-```json
-{
-  "status": "success",
-  "application": "Network Security",
-  "message": "API is running successfully"
-}
-```
-
-## 📁 Repository Structure
-
-```text
-Network-Security-Phishing-Website-Detection-using-Machine-Learning-AWS-CI-CD/
-├── .github/workflows/       # GitHub Actions CI/CD workflow
-├── data/                    # Project data
-├── data_schema/             # Data schema definitions
-├── prediction_output/       # Generated prediction output
-├── src/
-│   ├── components/          # ML pipeline components
-│   ├── configuration/       # Configuration modules
-│   ├── constant/            # Project constants
-│   ├── data_access/         # Data access utilities
-│   ├── entity/              # Configuration and artifact entities
-│   ├── exception/           # Custom exceptions
-│   ├── logging/             # Logging configuration
-│   ├── pipeline/            # Training pipeline
-│   └── utils/               # Utility functions
-├── templates/               # HTML templates
-├── tests/                   # Tests
-├── valid_data/              # Validated data
-├── app.py                   # FastAPI application
-├── main.py                  # Pipeline entry point
-├── push_data.py             # Data upload utility
-├── Dockerfile               # Docker image definition
-├── requirements.txt         # Python dependencies
-├── setup.py                 # Package configuration
-└── README.md
-```
-
-## ⚙️ Local Setup
+## Run locally
 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/Ravinuthala-Venkata-Siva-Prasad/Network-Security-Phishing-Website-Detection-using-Machine-Learning-AWS-CI-CD-Phishing-Website-Detection-using-Machine-Learning-AWS-CI-CD.git
-cd Network-Security
+git clone https://github.com/Ravinuthala-Venkata-Siva-Prasad/Network-Security-Phishing-Website-Detection-using-Machine-Learning-AWS-CI-CD.git
+cd Network-Security-Phishing-Website-Detection-using-Machine-Learning-AWS-CI-CD
 ```
 
 ### 2. Create and activate a virtual environment
 
 Windows:
 
-```powershell
-python -m venv .venv
-.venv\Scripts\activate
+```bash
+python -m venv venv
+venv\Scripts\activate
 ```
 
 Linux / macOS:
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+python3 -m venv venv
+source venv/bin/activate
 ```
 
 ### 3. Install dependencies
 
 ```bash
-python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
 ### 4. Configure environment variables
 
-Create a local `.env` file:
+Create a local `.env` file only if your application requires these settings:
 
 ```env
-MONGO_DB_URL=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<database>
+MONGO_DB_URL=your_mongodb_connection_string
 ENABLE_DAGSHUB_TRACKING=false
 ```
 
-Replace placeholders with your own MongoDB Atlas configuration. Do not commit `.env`, database credentials, cloud keys, or tokens to GitHub.
+Use your own connection string. **Never commit `.env`, database passwords, API tokens, or cloud credentials to GitHub.** Ensure `.env` is included in `.gitignore` and `.dockerignore`.
 
-### 5. Run the application
+### 5. Start the application
 
 ```bash
 python app.py
 ```
 
-Open `http://127.0.0.1:8000/` and visit `http://127.0.0.1:8000/docs` for Swagger UI.
+Open:
 
-> The application expects the trained model at `final_model/model.pkl`. Ensure the model artifact is available before running predictions.
+- Home page: `http://127.0.0.1:8000/`
+- Swagger docs: `http://127.0.0.1:8000/docs`
+- Health check: `http://127.0.0.1:8000/health`
 
-## 🐳 Docker
+## Run with Docker
 
 Build the image:
 
 ```bash
-docker build -t networksecurity:latest .
+docker build -t network-security .
 ```
 
-Run the container:
+Run the container (if your app uses a local `.env` file):
 
 ```bash
-docker run -d --name network-security-container -p 8000:8000 --env-file .env networksecurity:latest
+docker run -d \
+  --name network-security-container \
+  -p 8000:8000 \
+  --env-file .env \
+  network-security
 ```
 
-View logs and status:
+Check the container:
 
 ```bash
-docker logs --tail 100 network-security-container
 docker ps
+docker logs network-security-container
 ```
 
-## ☁️ AWS Deployment and CI/CD
+## AWS deployment and CI/CD
 
-The project has been deployed using:
+The deployment design shown in the project uses GitHub Actions, a self-hosted runner, Docker, Amazon ECR, and AWS EC2. The successful workflow run and EC2 instance are shown in the screenshots above.
 
-- **GitHub Actions:** Runs the automated deployment workflow.
-- **Self-hosted runner:** Executes the workflow on the EC2 host.
-- **Docker:** Builds and runs the application container.
-- **Amazon ECR:** Stores the Docker image.
-- **Amazon EC2:** Hosts the running application.
-- **MongoDB Atlas:** Provides the database service.
+For a public production deployment, use HTTPS, a domain name, restricted security-group rules, least-privilege IAM permissions, and managed secrets. Do not expose database credentials in workflow files or logs.
 
-Deployment sequence:
+## Repository structure
 
-1. Push a change to the configured GitHub branch or manually trigger the workflow.
-2. GitHub Actions checks out the repository and runs the configured checks.
-3. The workflow builds the Docker image.
-4. The image is pushed to Amazon ECR.
-5. EC2 pulls the image from ECR.
-6. The application container is started or replaced.
-7. The workflow calls `/health` to verify the application.
+The structure below is illustrative. Keep the paths aligned with the files that actually exist in your repository.
 
-Keep credentials in the EC2 environment file or an appropriate secrets manager. Never store secrets in the repository or workflow source. Restrict inbound access through security groups. For production, use HTTPS through a domain and reverse proxy or load balancer rather than exposing the application port directly.
-
-## 🧪 Testing
-
-Run tests:
-
-```bash
-pytest -q
+```text
+Network-Security/
+├── app.py
+├── requirements.txt
+├── Dockerfile
+├── .dockerignore
+├── .gitignore
+├── README.md
+├── final_model/
+│   └── model.pkl
+├── prediction_output/
+├── templates/
+│   ├── index.html
+│   └── table.html
+├── src/
+│   ├── components/
+│   ├── pipeline/
+│   ├── constant/
+│   └── utils/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml
+└── docs/
+    └── images/
+        ├── home-page.png
+        ├── prediction-results.png
+        ├── swagger-api.png
+        ├── github-actions-deployment.png
+        ├── aws-ec2-deployment.png
+        ├── system-architecture.png
+        └── cicd-deployment.png
 ```
 
-Check the API:
+## Future improvements
 
-```bash
-curl -i http://127.0.0.1:8000/health
-```
+- Add model evaluation results and a confusion matrix to the documentation.
+- Compare Random Forest with additional classification algorithms.
+- Add model and prediction monitoring.
+- Add authentication and request validation.
+- Configure HTTPS and a custom domain.
+- Integrate current threat-intelligence sources for URL-level analysis.
 
-For prediction testing, upload a representative CSV containing the expected 30 features through `/predict`. Compare predictions with ground-truth labels when evaluating model performance.
-
-## 📊 Model Evaluation
-
-Evaluate the classifier on a held-out dataset using:
-
-- Accuracy
-- Precision
-- Recall
-- F1-score
-- Confusion matrix
-- ROC-AUC (when prediction scores are available)
-
-Do not report an accuracy value unless it has been measured on a documented test set. A successful health check confirms that the service is running; it does not measure model accuracy.
-
-## 🔐 Security Notes and Limitations
-
-- Treat model predictions as decision support, not a guarantee that a website is safe or malicious.
-- False positives and false negatives are possible.
-- Keep MongoDB URIs, AWS credentials, DagsHub tokens, and other secrets out of source control.
-- Use HTTPS for public-facing deployments.
-- Restrict SSH and application access through security group rules.
-- Validate uploaded CSV files, including required columns, data types, and file size.
-- Retrain and re-evaluate the model when the data distribution changes.
-
-## 🚀 Future Improvements
-
-- Add automated model evaluation reports to CI/CD.
-- Add prediction history and monitoring.
-- Add model versioning and deployment rollback.
-- Configure HTTPS with a custom domain.
-- Improve upload validation and user-facing error messages.
-- Add monitoring for application health and prediction performance.
-
-## 👨‍💻 Author
+## Author
 
 **Ravinuthala Venkata Siva Prasad**
 
-- GitHub: [Ravinuthala-Venkata-Siva-Prasad](https://github.com/Ravinuthala-Venkata-Siva-Prasad)
-- Repository: [Network-Security](https://github.com/Ravinuthala-Venkata-Siva-Prasad/Network-Security-Phishing-Website-Detection-using-Machine-Learning-AWS-CI-CD)
+- GitHub: [Network Security – Phishing Website Detection](https://github.com/Ravinuthala-Venkata-Siva-Prasad/Network-Security-Phishing-Website-Detection-using-Machine-Learning-AWS-CI-CD)
+- LinkedIn: [LinkedIn profile](https://www.linkedin.com/in/ravinuthula-venkata-siva-prasad/)
 
-## 📄 License
+## Disclaimer
 
-This project is distributed under the MIT License. See [LICENSE](LICENSE) for details.
+This project is intended for educational and research purposes. Predictions are model outputs and should not be treated as a guarantee that a website is safe or malicious.
