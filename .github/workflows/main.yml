@@ -49,7 +49,7 @@ jobs:
       # Step 5: Run unit tests
       - name: Run Unit Tests
         run: |
-          pytest -v
+          pytest tests/ -v
 
   build-and-push:
     name: Build and Push Docker Image
